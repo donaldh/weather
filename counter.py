@@ -7,14 +7,26 @@ GPIO.setmode(GPIO.BOARD)
 
 print GPIO.RPI_INFO
 
+# anemometer
 GPIO.setup(16, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+# temperature / vane
+GPIO.setup(24, GPIO.OUT)
+GPIO.setup(23, GPIO.OUT)
+GPIO.setup(19, GPIO.OUT)
+GPIO.setup(21, GPIO.IN)
 
 count = 0
 
 def alarm_handler(signum, frame):
-	print "Counted", count * 2.5, 'mph'
+	mph = count * 2.5
 	global count
 	count = 0
+
+	temp = read_temp()
+	vane = read_volt(1)
+
+	print 'Measured %3.1f mph, dir %1.2f, temperature %3.1fC' % (mph, vane, temp)
 
 signal.signal(signal.SIGALRM, alarm_handler)
 signal.setitimer(signal.ITIMER_REAL, 1, 1)
@@ -25,10 +37,45 @@ def my_callback(channel):
 
 GPIO.add_event_detect(16, GPIO.FALLING, callback=my_callback, bouncetime=10)
 
+def read_volt(channel):
+	GPIO.output(24, True)
+	GPIO.output(23, False)
+	GPIO.output(19, True)
+
+	word1 = [1, 1, channel, 1, 1]
+
+	GPIO.output(24, False)
+	anip = 0
+
+	for x in range (0,5):
+		GPIO.output(19, word1[x])
+		time.sleep(0.001)
+		GPIO.output(23, True)
+		time.sleep(0.001)
+		GPIO.output(23, False)
+
+	for x in range (0,12):
+		GPIO.output(23, True)
+		time.sleep(0.001)
+		bit = GPIO.input(21)
+		time.sleep(0.001)
+		GPIO.output(23, False)
+		value=bit*2**(12-x-1)
+		anip = anip + value
+
+	GPIO.output(24, True)
+
+	volt = anip*3.3/4096
+	return volt
+
+def read_temp():
+	volt = read_volt(0)
+	temp = (55.5*volt) + 255.37 - 273.15
+	return temp
+
 try:
     while 1:
 	time.sleep(1)
 
 except KeyboardInterrupt:
 	GPIO.cleanup()
-GPIO.cleanup()
