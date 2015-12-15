@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import math
 import time
 import signal
 import RPi.GPIO as GPIO
@@ -24,9 +25,9 @@ def alarm_handler(signum, frame):
 	count = 0
 
 	temp = read_temp()
-	vane = read_volt(1)
+	vane = read_vane()
 
-	print 'Measured %3.1f mph, dir %1.2f, temperature %3.1fC' % (mph, vane, temp)
+	print 'Measured %3.1f mph, dir %d, temperature %3.1fC' % (mph, vane, temp)
 
 signal.signal(signal.SIGALRM, alarm_handler)
 signal.setitimer(signal.ITIMER_REAL, 1, 1)
@@ -72,6 +73,11 @@ def read_temp():
 	volt = read_volt(0)
 	temp = (55.5*volt) + 255.37 - 273.15
 	return temp
+
+def read_vane():
+	volt = read_volt(1)
+	vane = (volt - 0.17) * 359 / 2.91
+	return math.floor(vane)
 
 try:
     while 1:
