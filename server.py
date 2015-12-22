@@ -7,7 +7,7 @@ import BaseHTTPServer
 def query_weather():
     with sqlite3.connect('weather.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT date, temp FROM weather WHERE date < ((select min(date) from weather) + (60 * 60))')
+        cursor.execute('SELECT date, temp FROM weather WHERE date < ((select min(date) from weather) + (60 * 60 * 24))')
         data = cursor.fetchall()
         return data
 
