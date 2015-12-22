@@ -3,6 +3,7 @@
 import math
 import time
 import signal
+import sqlite3
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BOARD)
 
@@ -28,6 +29,7 @@ def alarm_handler(signum, frame):
 	vane = read_vane()
 
 	print 'Measured %3.1f mph, dir %d, temperature %3.1fC' % (mph, vane, temp)
+	write_temp(time.time(), temp, None, None, None)
 
 signal.signal(signal.SIGALRM, alarm_handler)
 signal.setitimer(signal.ITIMER_REAL, 1, 1)
@@ -70,14 +72,19 @@ def read_volt(channel):
 	return volt
 
 def read_temp():
-	volt = read_volt(0)
+	volt = read_volt(1)
 	temp = (55.5*volt) + 255.37 - 273.15
 	return temp
 
 def read_vane():
-	volt = read_volt(1)
+	volt = read_volt(0)
 	vane = (volt - 0.17) * 359 / 2.91
 	return math.floor(vane)
+
+def write_temp(when, temp, speed, dir, rain):
+	with sqlite3.connect('weather.db') as conn:
+		cursor = conn.cursor()
+		cursor.execute('INSERT into weather (time, temp, speed, dir, rain) values (?,?,?,?,?)', [when, temp, speed, dir, rain])
 
 try:
     while 1:
