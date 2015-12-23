@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-import json
 import sqlite3
-import BaseHTTPServer
+from flask import Flask, jsonify
+
+app = Flask('Weather')
+app.debug = True
 
 def query_weather():
     with sqlite3.connect('weather.db') as conn:
@@ -11,24 +13,14 @@ def query_weather():
         data = cursor.fetchall()
         return data
 
-class WeatherRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_head()
-        print >>self.wfile, json.dumps(query_weather())
+@app.route('/')
+def weather():
+    return jsonify(data=query_weather())
 
-    def do_HEAD(self):
-        self.send_head()
+@app.after_request
+def response_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
-    def send_head(self):
-        self.send_response(200)
-        self.send_header('Content-Type', 'text/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-
-def run(server = BaseHTTPServer.HTTPServer,
-        handler = WeatherRequestHandler):
-    server_address = ('', 8000)
-    httpd = server(server_address, handler)
-    httpd.serve_forever()
-
-run()
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8000)
