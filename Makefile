@@ -6,3 +6,6 @@ start:
 stop:
 	pkill -f sensors.py
 	pkill -f server.py
+
+db:
+	./createdb.sh weather.db
