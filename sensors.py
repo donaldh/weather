@@ -84,7 +84,7 @@ def read_vane():
 def write_temp(when, temp, speed, dir, rain):
 	with sqlite3.connect('weather.db') as conn:
 		cursor = conn.cursor()
-		cursor.execute('INSERT into weather (time, temp, speed, dir, rain) values (?,?,?,?,?)', [when, temp, speed, dir, rain])
+		cursor.execute('INSERT into weather (time, temp, speed, dir, rain) values (cast(?*1000 as integer),round(?,1),?,?,?)', [when, temp, speed, dir, rain])
 
 try:
     while 1:
