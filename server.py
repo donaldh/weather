@@ -7,7 +7,7 @@ import BaseHTTPServer
 def query_weather():
     with sqlite3.connect('weather.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT date, temp FROM weather WHERE date < ((select min(date) from weather) + (60 * 60 * 24))')
+        cursor.execute("SELECT max(time) as time, avg(temp) as temp FROM weather WHERE time > (strftime('%s','now') - 86400) group by cast(time / 60 as integer)")
         data = cursor.fetchall()
         return data
 
