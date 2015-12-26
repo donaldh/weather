@@ -46,7 +46,7 @@
         d3.json('//' + document.location.hostname + ':8000/day', function(error, json) {
         if (error) return console.warn(error);
 
-        d3.select("#now").append('div').attr('class', 'alert alert-info').text("Currently " + json.now[1] + " Celsius");
+        d3.select("#now").append('div').attr('class', 'alert alert-info').text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
 
 	var data = json.data;
         var width = d3.select("#weather").node().getBoundingClientRect().width, height = 300, padding = 20;
