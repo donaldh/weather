@@ -16,7 +16,7 @@ def query_latest():
 def query_past_day():
     with sqlite3.connect('weather.db') as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT max(time) as time, avg(temp) as temp FROM weather WHERE time > (strftime('%s','now') - 86400) group by cast(time / 300000 as integer)")
+        cursor.execute("SELECT max(time) as time, avg(temp) as temp FROM weather WHERE time > ((strftime('%s','now') - 86400)*1000) group by cast(time / 300000 as integer)")
         data = cursor.fetchall()
         return data
 
