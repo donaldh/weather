@@ -26,7 +26,6 @@ def query_date(conn):
 
 @app.route('/day')
 def weather():
-    print "Got request"
     with sqlite3.connect('weather.db') as conn:
         now = query_date(conn)
         start = now - 86400000
