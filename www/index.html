@@ -43,7 +43,7 @@
       <div id="now"></div>
       <div id="weather"></div>
       <script>
-        d3.json('//' + document.location.hostname + ':8000/day', function(error, json) {
+        d3.json('//' + document.location.hostname + ':8000/half', function(error, json) {
         if (error) return console.warn(error);
 
         d3.select("#now").append('div').attr('class', 'alert alert-info').text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
@@ -51,11 +51,8 @@
 	var data = json.data;
         var width = d3.select("#weather").node().getBoundingClientRect().width, height = 300, padding = 20;
 
-        var xMin = Date.now(), xMax = new Date(0);
-        data.forEach(function(d) { d[0] = new Date(d[0]);
-        if (d[0] < xMin) { xMin = d[0]; }
-                   if (d[0] > xMax) { xMax = d[0]; }
-          });
+        var xMin = new Date(json.start), xMax = new Date(json.end);
+        data.forEach(function(d) { d[0] = new Date(d[0]); });
 
           var x = d3.time.scale().domain([xMin, xMax]).range([0, width - padding * 2]);
           var y = d3.scale.linear().domain([0, 20]).range([height - padding, padding]);
