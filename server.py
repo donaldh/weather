@@ -6,25 +6,33 @@ from flask import Flask, jsonify
 app = Flask('Weather')
 app.debug = True
 
-def query_latest():
-    with sqlite3.connect('weather.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT max(time) as time, ROUND(temp,1) from WEATHER")
-        data = cursor.fetchall()
-        return data[0]
+def query_latest(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT max(time) as time, ROUND(temp,1) from WEATHER")
+    data = cursor.fetchall()
+    return data[0]
 
-def query_past_day():
-    with sqlite3.connect('weather.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT max(time) as time, avg(temp) as temp FROM weather WHERE time > ((strftime('%s','now') - 86400)*1000) group by cast(time / 300000 as integer)")
-        data = cursor.fetchall()
-        return data
+def query_past(conn, start):
+    cursor = conn.cursor()
+    cursor.execute("SELECT max(time) as time, avg(temp) as temp FROM weather WHERE time > ? group by cast(time / 300000 as integer)", [start])
+    data = cursor.fetchall()
+    return data
+
+def query_date(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT strftime('%s', 'now') * 1000")
+    data = cursor.fetchall()
+    return data[0][0]
 
 @app.route('/day')
 def weather():
-    latest = query_latest()
-    past_day = query_past_day()
-    return jsonify(data=past_day, now=latest)
+    print "Got request"
+    with sqlite3.connect('weather.db') as conn:
+        now = query_date(conn)
+        start = now - 86400000
+        latest = query_latest(conn)
+        past_day = query_past(conn, start)
+        return jsonify(data=past_day, now=latest, start=start, end=now)
 
 @app.after_request
 def response_headers(response):
@@ -32,4 +40,4 @@ def response_headers(response):
     return response
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=8000, threaded=True)
