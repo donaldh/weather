@@ -4,8 +4,8 @@ start:
 	nohup ./server.py > server.log &
 
 stop:
-	pkill -f sensors.py
-	pkill -f server.py
+	-pkill -f sensors.py
+	-pkill -f server.py
 
 db:
 	./createdb.sh weather.db
