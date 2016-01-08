@@ -25,10 +25,25 @@ def query_date(conn):
     return data[0][0]
 
 @app.route('/day')
-def weather():
+def weather_day():
+    return weather(86400000)
+
+@app.route('/half')
+def weather_half():
+    return weather(43200000)
+
+@app.route('/six')
+def weather_six():
+    return weather(21600000)
+
+@app.route('/')
+def weather_now():
+    return weather(1000)
+
+def weather(duration):
     with sqlite3.connect('weather.db') as conn:
         now = query_date(conn)
-        start = now - 86400000
+        start = now - duration
         latest = query_latest(conn)
         past_day = query_past(conn, start)
         return jsonify(data=past_day, now=latest, start=start, end=now)
