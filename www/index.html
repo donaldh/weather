@@ -43,17 +43,20 @@
       <div id="now"></div>
       <div id="weather"></div>
       <div id="buttons" class="btn-group" role="group" style="visibility: hidden">
-        <button type="button" class="btn">3 hours</button>
-        <button type="button" class="btn btn-default">6 hours</button>
-        <button type="button" class="btn">12 hours</button>
-        <button type="button" class="btn">24 hours</button>
+        <button type="button" class="btn" onclick="weather('six')">6 hours</button>
+        <button type="button" class="btn" onclick="weather('half')">12 hours</button>
+        <button type="button" class="btn" onclick="weather('day')">24 hours</button>
       </div>
       <script>
+        var nowDiv = d3.select('#now').append('div').attr('class', 'alert alert-info');
+        var svg = d3.select('#weather').append('svg');
+
         var weather = function(duration) {
         d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
         if (error) return console.warn(error);
 
-        d3.select("#now").append('div').attr('class', 'alert alert-info').text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
+        svg.selectAll('*').remove();
+        nowDiv.text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
 
 	var data = json.data;
         var width = d3.select("#weather").node().getBoundingClientRect().width, height = 350, padding = 20;
@@ -69,7 +72,7 @@
           .y(function(d) { return y(d[1]); })
           .interpolate('linear');
 
-          var svg = d3.select('#weather').append('svg')
+          svg
           .attr('width', width)
           .attr('height', height)
           .append('g').attr('transform', 'translate(20, 0)');
