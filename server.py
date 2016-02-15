@@ -12,9 +12,9 @@ def query_latest(conn):
     data = cursor.fetchall()
     return data[0]
 
-def query_past(conn, start):
+def query_past(conn, start, interval):
     cursor = conn.cursor()
-    cursor.execute("SELECT max(time) as time, avg(temp) as temp FROM weather WHERE time > ? group by cast(time / 300000 as integer)", [start])
+    cursor.execute("SELECT max(time) as time, avg(temp) as temp FROM weather WHERE time > ? group by cast(time / ? as integer)", [start, interval])
     data = cursor.fetchall()
     return data
 
@@ -45,7 +45,7 @@ def weather(duration):
         now = query_date(conn)
         start = now - duration
         latest = query_latest(conn)
-        past_day = query_past(conn, start)
+        past_day = query_past(conn, start, duration / 150)
         return jsonify(data=past_day, now=latest, start=start, end=now)
 
 @app.after_request
