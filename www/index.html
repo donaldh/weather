@@ -13,6 +13,12 @@
           font: 10px sans-serif;
       }
 
+      .line {
+          stroke: blue;
+          stroke-width: 1;
+          fill: none;
+      }
+
       .axis line,
       .axis path {
           fill: none;
@@ -48,44 +54,60 @@
       <script>
         var width = d3.select("#weather").node().getBoundingClientRect().width, height = 350, padding = 25;
         var nowDiv = d3.select("#now").append('div').attr('class', 'alert alert-info');
-        var svg = d3.select("#weather").append('svg').attr('width', width).attr('height', height);
-        var g = svg.append('g').attr('transform', 'translate(' + padding + ',0)');
+        var svg = d3.select("#weather")
+                    .append('svg').attr('width', width).attr('height', height)
+                    .append('g').attr('transform', 'translate(' + padding + ',0)');
+
+        var x = d3.time.scale().domain([new Date(), new Date()]).range([0, width - padding * 2]);
+        var y = d3.scale.linear().domain([-5, 20]).range([height - padding, padding]);
+
+        var line = d3.svg.line()
+                     .x(function(d) { return x(d[0]); })
+                     .y(function(d) { return y(d[1]); })
+                     .interpolate('linear');
+
+        x.grid = d3.svg.axis().scale(x).orient('bottom').tickSize(-(height - padding * 2), 0, 0).tickFormat('');
+        var xgrid = svg.append('g').attr('class', 'grid')
+                       .attr('transform', 'translate(0, ' + (height - padding) + ')')
+                       .call(x.grid);
+
+        y.grid = d3.svg.axis().scale(y).orient('left').tickSize(-(width - padding * 2), 0, 0).tickFormat('');
+        var ygrid = svg.append('g').attr('class', 'grid')
+                       .call(y.grid);
+
+        x.axis = d3.svg.axis().scale(x).orient('bottom');
+        var xaxis = svg.append('g').attr('class', 'x axis')
+                       .attr('transform', 'translate(0, ' + (height - padding) + ')')
+                       .call(x.axis);
+
+        y.axis = d3.svg.axis().scale(y).orient('left');
+        var yaxis = svg.append('g').attr('class', 'y axis')
+                       .call(y.axis);
+
+        var path = svg.append('path')
+                      .datum([])
+                      .attr('d', line)
+                      .attr('class', 'line');
 
         var weather = function(duration) {
             d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
                 if (error) return console.warn(error);
 
-                g.selectAll('*').remove();
                 nowDiv.text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
 
-                var data = json.data;
-
                 var xMin = new Date(json.start), xMax = new Date(json.end);
+                var data = json.data;
                 data.forEach(function(d) { d[0] = new Date(d[0]); });
+                x.domain([xMin, xMax]);
 
-                var x = d3.time.scale().domain([xMin, xMax]).range([0, width - padding * 2]);
-                var y = d3.scale.linear().domain([-5, 20]).range([height - padding, padding]);
+                path.datum(data);
 
-                var line = d3.svg.line()
-                             .x(function(d) { return x(d[0]); })
-                             .y(function(d) { return y(d[1]); })
-                             .interpolate('linear');
-
-                g.append('g').attr('class', 'grid')
-                 .attr('transform', 'translate(0, ' + (height - padding) + ')')
-                 .call(d3.svg.axis().scale(x).orient('bottom').tickSize(-(height - padding * 2), 0, 0).tickFormat(''));
-
-                g.append('g').attr('class', 'grid')
-                 .call(d3.svg.axis().scale(y).orient('left').tickSize(-(width - padding * 2), 0, 0).tickFormat(''));
-
-                g.append('g').attr('class', 'x axis')
-                 .attr('transform', 'translate(0, ' + (height - padding) + ')')
-                 .call(d3.svg.axis().scale(x).orient('bottom'));
-
-                g.append('g').attr('class', 'y axis').call(d3.svg.axis().scale(y).orient('left'));
-
-                g.append('path').datum(data).attr('d', line).attr("stroke", "blue")
-                 .attr("stroke-width", 1).attr("fill", "none");
+                svg.select('.line')
+                   .transition().attr('d', line);
+                xgrid.transition().call(x.grid);
+                ygrid.transition().call(y.grid);
+                xaxis.transition().call(x.axis);
+                yaxis.transition().call(y.axis);
             });
         };
 
