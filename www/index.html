@@ -42,20 +42,27 @@
     <div class="container">
       <div id="now"></div>
       <div id="weather"></div>
+      <div id="buttons" class="btn-group" role="group" style="visibility: hidden">
+        <button type="button" class="btn">3 hours</button>
+        <button type="button" class="btn btn-default">6 hours</button>
+        <button type="button" class="btn">12 hours</button>
+        <button type="button" class="btn">24 hours</button>
+      </div>
       <script>
-        d3.json('//' + document.location.hostname + ':8000/half', function(error, json) {
+        var weather = function(duration) {
+        d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
         if (error) return console.warn(error);
 
         d3.select("#now").append('div').attr('class', 'alert alert-info').text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
 
 	var data = json.data;
-        var width = d3.select("#weather").node().getBoundingClientRect().width, height = 300, padding = 20;
+        var width = d3.select("#weather").node().getBoundingClientRect().width, height = 350, padding = 20;
 
         var xMin = new Date(json.start), xMax = new Date(json.end);
         data.forEach(function(d) { d[0] = new Date(d[0]); });
 
           var x = d3.time.scale().domain([xMin, xMax]).range([0, width - padding * 2]);
-          var y = d3.scale.linear().domain([0, 20]).range([height - padding, padding]);
+          var y = d3.scale.linear().domain([-5, 20]).range([height - padding, padding]);
 
           var line = d3.svg.line()
           .x(function(d) { return x(d[0]); })
@@ -82,7 +89,11 @@
 
         svg.append('path').datum(data).attr('d', line).attr("stroke", "blue")
         .attr("stroke-width", 1).attr("fill", "none");
+
+        d3.select("#buttons").style("visibility", "visible");
         });
+        };
+        weather('half');
       </script>
     </div>
   </body>
