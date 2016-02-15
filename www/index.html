@@ -46,10 +46,10 @@
         <button type="button" class="btn" onclick="weather('day')">24 hours</button>
       </div>
       <script>
-        var width = d3.select("#weather").node().getBoundingClientRect().width, height = 350, padding = 20;
+        var width = d3.select("#weather").node().getBoundingClientRect().width, height = 350, padding = 25;
         var nowDiv = d3.select("#now").append('div').attr('class', 'alert alert-info');
         var svg = d3.select("#weather").append('svg').attr('width', width).attr('height', height);
-        var g = svg.append('g').attr('transform', 'translate(20, 0)');
+        var g = svg.append('g').attr('transform', 'translate(' + padding + ',0)');
 
         var weather = function(duration) {
             d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
