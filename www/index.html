@@ -9,27 +9,25 @@
           integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <style>
+      .axis text {
+          font: 10px sans-serif;
+      }
 
-.axis text {
-  font: 10px sans-serif;
-}
+      .axis line,
+      .axis path {
+          fill: none;
+          stroke: #000;
+          shape-rendering: crispEdges;
+      }
 
-.axis line,
-.axis path {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
+      .grid .tick {
+          stroke: lightgrey;
+          opacity: 0.7;
+      }
 
-.grid .tick {
-  stroke: lightgrey;
-  opacity: 0.7;
-}
-
-.grid path {
-  stroke-width: 0;
-}
-
+      .grid path {
+          stroke-width: 0;
+      }
     </style>
   </head>
   <body>
@@ -42,59 +40,53 @@
     <div class="container">
       <div id="now"></div>
       <div id="weather"></div>
-      <div id="buttons" class="btn-group" role="group" style="visibility: hidden">
+      <div id="buttons" class="btn-group" role="group">
         <button type="button" class="btn" onclick="weather('six')">6 hours</button>
         <button type="button" class="btn" onclick="weather('half')">12 hours</button>
         <button type="button" class="btn" onclick="weather('day')">24 hours</button>
       </div>
       <script>
-        var nowDiv = d3.select('#now').append('div').attr('class', 'alert alert-info');
-        var svg = d3.select('#weather').append('svg');
+        var width = d3.select("#weather").node().getBoundingClientRect().width, height = 350, padding = 20;
+        var nowDiv = d3.select("#now").append('div').attr('class', 'alert alert-info');
+        var svg = d3.select("#weather").append('svg').attr('width', width).attr('height', height);
+        var g = svg.append('g').attr('transform', 'translate(20, 0)');
 
         var weather = function(duration) {
-        d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
-        if (error) return console.warn(error);
+            d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
+                if (error) return console.warn(error);
 
-        svg.selectAll('*').remove();
-        nowDiv.text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
+                g.selectAll('*').remove();
+                nowDiv.text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
 
-	var data = json.data;
-        var width = d3.select("#weather").node().getBoundingClientRect().width, height = 350, padding = 20;
+                var data = json.data;
 
-        var xMin = new Date(json.start), xMax = new Date(json.end);
-        data.forEach(function(d) { d[0] = new Date(d[0]); });
+                var xMin = new Date(json.start), xMax = new Date(json.end);
+                data.forEach(function(d) { d[0] = new Date(d[0]); });
 
-          var x = d3.time.scale().domain([xMin, xMax]).range([0, width - padding * 2]);
-          var y = d3.scale.linear().domain([-5, 20]).range([height - padding, padding]);
+                var x = d3.time.scale().domain([xMin, xMax]).range([0, width - padding * 2]);
+                var y = d3.scale.linear().domain([-5, 20]).range([height - padding, padding]);
 
-          var line = d3.svg.line()
-          .x(function(d) { return x(d[0]); })
-          .y(function(d) { return y(d[1]); })
-          .interpolate('linear');
+                var line = d3.svg.line()
+                             .x(function(d) { return x(d[0]); })
+                             .y(function(d) { return y(d[1]); })
+                             .interpolate('linear');
 
-          svg
-          .attr('width', width)
-          .attr('height', height)
-          .append('g').attr('transform', 'translate(20, 0)');
+                g.append('g').attr('class', 'grid')
+                 .attr('transform', 'translate(0, ' + (height - padding) + ')')
+                 .call(d3.svg.axis().scale(x).orient('bottom').tickSize(-(height - padding * 2), 0, 0).tickFormat(''));
 
-          svg.append('g').attr('class', 'grid')
-          .attr('transform', 'translate(0, ' + (height - padding) + ')')
-          .call(d3.svg.axis().scale(x).orient('bottom').tickSize(-(height - padding * 2), 0, 0).tickFormat(''));
+                g.append('g').attr('class', 'grid')
+                 .call(d3.svg.axis().scale(y).orient('left').tickSize(-(width - padding * 2), 0, 0).tickFormat(''));
 
-          svg.append('g').attr('class', 'grid')
-          .call(d3.svg.axis().scale(y).orient('left').tickSize(-(width - padding * 2), 0, 0).tickFormat(''));
+                g.append('g').attr('class', 'x axis')
+                 .attr('transform', 'translate(0, ' + (height - padding) + ')')
+                 .call(d3.svg.axis().scale(x).orient('bottom'));
 
-          svg.append('g').attr('class', 'x axis')
-          .attr('transform', 'translate(0, ' + (height - padding) + ')')
-          .call(d3.svg.axis().scale(x).orient('bottom'));
+                g.append('g').attr('class', 'y axis').call(d3.svg.axis().scale(y).orient('left'));
 
-        svg.append('g').attr('class', 'y axis').call(d3.svg.axis().scale(y).orient('left'));
-
-        svg.append('path').datum(data).attr('d', line).attr("stroke", "blue")
-        .attr("stroke-width", 1).attr("fill", "none");
-
-        d3.select("#buttons").style("visibility", "visible");
-        });
+                g.append('path').datum(data).attr('d', line).attr("stroke", "blue")
+                 .attr("stroke-width", 1).attr("fill", "none");
+            });
         };
 
         weather('six');
