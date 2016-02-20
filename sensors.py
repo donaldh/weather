@@ -29,7 +29,7 @@ def alarm_handler(signum, frame):
 	vane = read_vane()
 
 	# print 'Measured %3.1f mph, dir %d, temperature %3.1fC' % (mph, vane, temp)
-	write_temp(time.time(), temp, None, None, None)
+	write_temp(time.time(), temp, mph, vane, None)
 
 signal.signal(signal.SIGALRM, alarm_handler)
 signal.setitimer(signal.ITIMER_REAL, 1, 1)

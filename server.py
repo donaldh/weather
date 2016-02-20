@@ -14,7 +14,7 @@ def query_latest(conn):
 
 def query_past(conn, start, interval):
     cursor = conn.cursor()
-    cursor.execute("SELECT max(time) as time, avg(temp) as temp FROM weather WHERE time > ? group by cast(time / ? as integer)", [start, interval])
+    cursor.execute("SELECT max(time) as time, avg(temp) as temp, avg(speed) as speed, avg(dir) as dir FROM weather WHERE time > ? group by cast(time / ? as integer)", [start, interval])
     data = cursor.fetchall()
     return data
 

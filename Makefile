@@ -1,7 +1,8 @@
 
 start:
-	nohup ./sensors.py > sensors.log &
-	nohup ./server.py > server.log &
+	mkdir -p log
+	nohup ./sensors.py > log/sensors.log &
+	nohup ./server.py > log/server.log &
 
 stop:
 	-pkill -f sensors.py
