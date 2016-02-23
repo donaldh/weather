@@ -7,7 +7,7 @@
     <title>Carlston Cottage Weather</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
           integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-    <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="//d3js.org/d3.v3.min.js" Charset="utf-8"></script>
     <style>
       .axis text {
           font: 10px sans-serif;
@@ -58,49 +58,79 @@
     </div>
     <div class="container">
       <div id="now" class="alert alert-info">Loading ...</div>
-      <div id="weather"></div>
+      <div id="celsius"></div>
+      <div id="speed"></div>
       <div id="buttons" class="btn-group" role="group">
         <button type="button" class="btn" onclick="weather('six')">6 hours</button>
         <button type="button" class="btn" onclick="weather('half')">12 hours</button>
         <button type="button" class="btn" onclick="weather('day')">24 hours</button>
       </div>
       <script>
-        var width = d3.select("#weather").node().getBoundingClientRect().width, height = 350, padding = 25;
+        var width = d3.select("#now").node().getBoundingClientRect().width,
+            height = 300,
+            padding = 25;
         var nowDiv = d3.select("#now");
-        var svg = d3.select("#weather")
-                    .append('svg').attr('width', width).attr('height', height)
-                    .append('g').attr('transform', 'translate(' + padding + ',0)');
 
-        var x = d3.time.scale().domain([new Date(), new Date()]).range([0, width - padding * 2]);
-        var y = d3.scale.linear().domain([-5, 20]).range([height - padding, padding]);
+        var chart = function(id, width, height, yIndex) {
+            this.svg = d3.select(id)
+                        .append('svg').attr('width', width).attr('height', height)
+                        .append('g').attr('transform', 'translate(' + padding + ',0)');
 
-        var line = d3.svg.line()
-                     .x(function(d) { return x(d[0]); })
-                     .y(function(d) { return y(d[1]); })
-                     .interpolate('linear');
+            this.x = d3.time.scale().domain([new Date(), new Date()]).range([0, width - padding * 2]);
+            this.y = d3.scale.linear().domain([-5, 20]).range([height - padding, padding]);
 
-        x.grid = d3.svg.axis().scale(x).orient('bottom').tickSize(-(height - padding * 2), 0, 0).tickFormat('');
-        var xgrid = svg.append('g').attr('class', 'grid')
-                       .attr('transform', 'translate(0, ' + (height - padding) + ')')
-                       .call(x.grid);
+            var self = this;
+            this.line = d3.svg.line()
+                          .x(function(d) { return self.x(d[0]); })
+                          .y(function(d) { return self.y(d[yIndex]); })
+                          .interpolate('linear');
 
-        y.grid = d3.svg.axis().scale(y).orient('left').tickSize(-(width - padding * 2), 0, 0).tickFormat('');
-        var ygrid = svg.append('g').attr('class', 'grid')
-                       .call(y.grid);
+            this.x.grid = d3.svg.axis().scale(this.x)
+                            .orient('bottom')
+                            .tickSize(-(height - padding * 2), 0, 0)
+                            .tickFormat('');
+            this.xgrid = this.svg.append('g').attr('class', 'grid')
+                             .attr('transform', 'translate(0, ' + (height - padding) + ')')
+                             .call(this.x.grid);
 
-        x.axis = d3.svg.axis().scale(x).orient('bottom');
-        var xaxis = svg.append('g').attr('class', 'x axis')
-                       .attr('transform', 'translate(0, ' + (height - padding) + ')')
-                       .call(x.axis);
+            this.y.grid = d3.svg.axis().scale(this.y)
+                            .orient('left')
+                            .tickSize(-(width - padding * 2), 0, 0)
+                            .tickFormat('');
+            this.ygrid = this.svg.append('g').attr('class', 'grid')
+                             .call(this.y.grid);
 
-        y.axis = d3.svg.axis().scale(y).orient('left');
-        var yaxis = svg.append('g').attr('class', 'y axis')
-                       .call(y.axis);
+            this.x.axis = d3.svg.axis().scale(this.x).orient('bottom');
+            this.xaxis = this.svg.append('g').attr('class', 'x axis')
+                             .attr('transform', 'translate(0, ' + (height - padding) + ')')
+                             .call(this.x.axis);
 
-        var path = svg.append('path')
-                      .datum([])
-                      .attr('d', line)
-                      .attr('class', 'line');
+            this.y.axis = d3.svg.axis().scale(this.y).orient('left');
+            this.yaxis = this.svg.append('g').attr('class', 'y axis')
+                             .call(this.y.axis);
+
+            this.path = this.svg.append('path')
+                            .datum([])
+                            .attr('d', this.line)
+                            .attr('class', 'line');
+
+            this.update = function(data, min, max) {
+                data.forEach(function(d) { d[0] = new Date(d[0]); });
+                this.x.domain([min, max]);
+
+                this.path.datum(data);
+
+                this.svg.select('.line')
+                    .transition().attr('d', this.line);
+                this.xgrid.transition().call(this.x.grid);
+                this.ygrid.transition().call(this.y.grid);
+                this.xaxis.transition().call(this.x.axis);
+                this.yaxis.transition().call(this.y.axis);
+            }
+        }
+
+        var celsius = new chart('#celsius', width, height, 1);
+        var speed = new chart('#speed', width, height, 2);
 
         var weather = function(duration) {
             d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
@@ -108,19 +138,12 @@
 
                 nowDiv.text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
 
-                var xMin = new Date(json.start), xMax = new Date(json.end);
+                var xMin = new Date(json.start),
+                    xMax = new Date(json.end);
                 var data = json.data;
-                data.forEach(function(d) { d[0] = new Date(d[0]); });
-                x.domain([xMin, xMax]);
 
-                path.datum(data);
-
-                svg.select('.line')
-                   .transition().attr('d', line);
-                xgrid.transition().call(x.grid);
-                ygrid.transition().call(y.grid);
-                xaxis.transition().call(x.axis);
-                yaxis.transition().call(y.axis);
+                celsius.update(data, xMin, xMax);
+                speed.update(data, xMin, xMax);
             });
         };
 
