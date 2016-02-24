@@ -7,7 +7,7 @@ import sqlite3
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BOARD)
 
-print GPIO.RPI_INFO
+# print GPIO.RPI_INFO
 
 # anemometer
 GPIO.setup(16, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -18,25 +18,55 @@ GPIO.setup(23, GPIO.OUT)
 GPIO.setup(19, GPIO.OUT)
 GPIO.setup(21, GPIO.IN)
 
-count = 0
+class Speed:
+    count = 0
+    def read(self):
+        mph = self.count * 2.5
+        self.count = 0
+        return mph
+    def increment(self):
+        self.count += 1
+
+anemometer = Speed()
+
+class Accumulator:
+    def __init__(self, many):
+        self.many = many
+        self.reset()
+
+    def reset(self):
+        self.speeds = []
+        self.temps = []
+        self.vanes = []
+
+    def append(self, speed, temp, vane):
+        self.speeds.append(speed)
+        self.temps.append(temp)
+        self.vanes.append(vane)
+        if len(self.speeds) == 10:
+            avSpeed = sum(self.speeds) / len(self.speeds)
+            avTemp = sum(self.temps) / len(self.temps)
+            avVane = sum(self.vanes) / len(self.vanes)
+            self.reset()
+            self.store(avSpeed, avTemp, avVane)
+
+    def store(self, mph, temp, vane):
+        # print 'Measured %3.1f mph, dir %d, temperature %3.1fC' % (mph, vane, temp)
+        write_temp(time.time(), temp, mph, vane, None)
+
+accumulator = Accumulator(10)
 
 def alarm_handler(signum, frame):
-	mph = count * 2.5
-	global count
-	count = 0
-
+        mph = anemometer.read()
 	temp = read_temp()
 	vane = read_vane()
-
-	# print 'Measured %3.1f mph, dir %d, temperature %3.1fC' % (mph, vane, temp)
-	write_temp(time.time(), temp, mph, vane, None)
+        accumulator.append(mph, temp, vane)
 
 signal.signal(signal.SIGALRM, alarm_handler)
 signal.setitimer(signal.ITIMER_REAL, 1, 1)
 
 def my_callback(channel):
-	global count
-	count += 1
+    anemometer.increment()
 
 GPIO.add_event_detect(16, GPIO.FALLING, callback=my_callback, bouncetime=10)
 
