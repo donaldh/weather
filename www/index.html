@@ -71,13 +71,13 @@
             padding = 25;
         var nowDiv = d3.select("#now");
 
-        var chart = function(id, width, height, yIndex) {
+        var chart = function(id, width, height, yMin, yMax, yIndex) {
             this.svg = d3.select(id)
                         .append('svg').attr('width', width).attr('height', height)
                         .append('g').attr('transform', 'translate(' + padding + ',0)');
 
             this.x = d3.time.scale().domain([new Date(), new Date()]).range([0, width - padding * 2]);
-            this.y = d3.scale.linear().domain([-5, 20]).range([height - padding, padding]);
+            this.y = d3.scale.linear().domain([yMin, yMax]).range([height - padding, padding]);
 
             var self = this;
             this.line = d3.svg.line()
@@ -129,8 +129,8 @@
             }
         }
 
-        var celsius = new chart('#celsius', width, height, 1);
-        var speed = new chart('#speed', width, height, 2);
+        var celsius = new chart('#celsius', width, height, -5, 20, 1);
+        var speed = new chart('#speed', width, height, 0, 40, 2);
 
         var weather = function(duration) {
             d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
