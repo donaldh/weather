@@ -116,7 +116,7 @@ def write_temp(when, temp, speed, dir, rain):
 
 try:
     while 1:
-    time.sleep(1)
+        time.sleep(1)
 
 except KeyboardInterrupt:
     GPIO.cleanup()
