@@ -47,6 +47,10 @@
       .grid path {
           stroke-width: 0;
       }
+
+      .right {
+          float: right;
+      }
     </style>
   </head>
   <body>
@@ -57,7 +61,7 @@
       </div>
     </div>
     <div class="container">
-      <div id="now" class="alert alert-info">Loading ...</div>
+      <div id="now" class="alert alert-info">Loading ... <span class="right"></span></div>
       <div id="celsius"></div>
       <div id="speed"></div>
       <div id="buttons" class="btn-group" role="group">
@@ -67,7 +71,7 @@
       </div>
       <script>
         var width = d3.select("#now").node().getBoundingClientRect().width,
-            height = 250,
+            height = 200,
             padding = 25;
         var nowDiv = d3.select("#now");
 
@@ -129,14 +133,20 @@
             }
         }
 
-        var celsius = new chart('#celsius', width, height, -5, 20, 1);
-        var speed = new chart('#speed', width, height, 0, 40, 2);
+        var celsius = new chart('#celsius', width, 250, -5, 25, 1);
+        var speed = new chart('#speed', width, 200, 0, 40, 2);
 
         var weather = function(duration) {
             d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
-                if (error) return console.warn(error);
+                if (error) return nowDiv.text(error);
 
-                nowDiv.text(new Date(json.now[0]) + " - Currently " + json.now[1] + " Celsius");
+                nowDiv.text("Currently "
+                          + json.now[1] + " Celsius, "
+                          + json.now[2] + " mph, "
+                          + json.now[3] + "˚")
+                      .append('span')
+                      .attr('class', 'right')
+                      .text(new Date(json.now[0]));
 
                 var xMin = new Date(json.start),
                     xMax = new Date(json.end);
