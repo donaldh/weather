@@ -8,7 +8,7 @@ app.debug = True
 
 def query_latest(conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT max(time) as time, ROUND(temp,1), ROUND(speed,1), ROUND(dir,1) from WEATHER")
+    cursor.execute("SELECT max(time) as time, ROUND(temp,1), ROUND(speed,1), ROUND(dir,0) from WEATHER")
     data = cursor.fetchall()
     return data[0]
 
