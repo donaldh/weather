@@ -70,6 +70,11 @@
             height = 200,
             padding = 25;
         var nowDiv = d3.select("#now");
+        var directions = [ 'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+                           'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW' ];
+        var dirname = function(dir) {
+            return directions[Math.round(dir / 22.5)];
+        }
 
         var chart = function(id, width, height, yMin, yMax, yIndex) {
             this.svg = d3.select(id)
@@ -144,7 +149,9 @@
                       .text("Currently "
                           + json.now[1] + " Celsius, "
                           + json.now[2] + " mph, "
-                          + json.now[3] + "˚")
+                          + json.now[3] + "˚ "
+                          + dirname(json.now[3])
+                      )
                       .append('span')
                       .attr('class', 'right')
                       .text(new Date(json.now[0]));
