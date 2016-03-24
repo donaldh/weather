@@ -134,9 +134,14 @@
 
         var weather = function(duration) {
             d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
-                if (error) return nowDiv.text(error);
+                if (error) {
+                    var message = error.status + " : " + error.statusText;
+                    nowDiv.attr('class', 'alert alert-danger');
+                    return nowDiv.text(message);
+                }
 
-                nowDiv.text("Currently "
+                nowDiv.attr('class', 'alert alert-info')
+                      .text("Currently "
                           + json.now[1] + " Celsius, "
                           + json.now[2] + " mph, "
                           + json.now[3] + "˚")
