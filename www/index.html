@@ -122,7 +122,7 @@
             this.update = function(data, min, max) {
                 data.forEach(function(d) { d[0] = new Date(d[0]); });
                 this.x.domain([min, max]);
-                this.y.domain(d3.extent(data, d => d[yIndex])).nice(10);
+                this.y.domain(d3.extent(d3.extent(data, d => d[yIndex]).concat(yMin, yMax))).nice(10);
 
                 this.path.datum(data);
 
@@ -135,8 +135,8 @@
             }
         }
 
-        var celsius = new chart('#celsius', width, 240, -5, 20, 1);
-        var speed = new chart('#speed', width, 200, 0, 40, 2);
+        var celsius = new chart('#celsius', width, 240, 0, 20, 1);
+        var speed = new chart('#speed', width, 200, 0, 20, 2);
 
         var weather = function(duration) {
             d3.json('//' + document.location.hostname + ':8000/' + duration, function(error, json) {
