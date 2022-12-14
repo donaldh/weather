@@ -27,6 +27,9 @@
           stroke-width: 1;
           fill: none;
       }
+      .origin {
+          stroke: darkslategrey;
+      }
       .axis line,
       .axis path {
           fill: none;
@@ -104,7 +107,9 @@
                             .tickSize(-(width - padding * 2), 0, 0)
                             .tickFormat('');
             this.ygrid = this.svg.append('g').attr('class', 'grid')
-                             .call(this.y.grid);
+                             .call(this.y.grid)
+                             .call(g => g.selectAll(".tick line")
+                                         .attr("class", d => d === 0 ? "origin": ""));
 
             this.x.axis = d3.svg.axis().scale(this.x).orient('bottom');
             this.xaxis = this.svg.append('g').attr('class', 'x axis')
