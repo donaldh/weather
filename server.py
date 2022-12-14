@@ -24,6 +24,10 @@ def query_date(conn):
     data = cursor.fetchall()
     return data[0][0]
 
+@app.route('/three-days')
+def weather_three_days():
+    return weather(86400000 * 3)
+
 @app.route('/day')
 def weather_day():
     return weather(86400000)
