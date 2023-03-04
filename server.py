@@ -24,6 +24,10 @@ def query_date(conn):
     data = cursor.fetchall()
     return data[0][0]
 
+@app.route('/seven-days')
+def weather_seven_days():
+    return weather(86400000 * 7)
+
 @app.route('/three-days')
 def weather_three_days():
     return weather(86400000 * 3)
@@ -49,8 +53,8 @@ def weather(duration):
         now = query_date(conn)
         start = now - duration
         latest = query_latest(conn)
-        past_day = query_past(conn, start, duration / 150)
-        return jsonify(data=past_day, now=latest, start=start, end=now)
+        data = query_past(conn, start, duration / 143)
+        return jsonify(data=data, samples=len(data), now=latest, start=start, end=now)
 
 @app.after_request
 def response_headers(response):
