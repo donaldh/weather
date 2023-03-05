@@ -1,7 +1,47 @@
 #!/usr/bin/env python
 
+import json
+import time
 import sqlite3
+import paho.mqtt.client as mqtt
 from flask import Flask, jsonify
+
+class Accumulator:
+    def __init__(self, many):
+        self.many = many
+        self.reset()
+
+    def reset(self):
+        self.speeds = []
+        self.temps = []
+        self.vanes = []
+
+    def append(self, speed, temp, vane):
+        self.speeds.append(speed)
+        self.temps.append(temp)
+        self.vanes.append(vane)
+        if len(self.speeds) == 10:
+            avSpeed = sum(self.speeds) / len(self.speeds)
+            avTemp = sum(self.temps) / len(self.temps)
+            avVane = sum(self.vanes) / len(self.vanes)
+            self.reset()
+            self.store(avSpeed, avTemp, avVane)
+
+    def store(self, mph, temp, vane):
+        # print 'Measured %3.1f mph, dir %d, temperature %3.1fC' % (mph, vane, temp)
+        write_temp(time.time(), temp, mph, vane, None)
+
+def write_temp(when, temp, speed, dir, rain):
+    with sqlite3.connect('weather.db') as conn:
+        cursor = conn.cursor()
+        # print(f"{when} {temp} {speed} {dir}")
+        try:
+            cursor.execute('INSERT into weather (time, temp, speed, dir, rain) values (cast(?*1000 as integer),round(?,1),?,?,?)',
+                           [when, temp, speed, dir, rain])
+        except:
+            pass
+
+accumulator = Accumulator(10)
 
 app = Flask('Weather')
 app.debug = True
@@ -59,7 +99,23 @@ def weather(duration):
 @app.after_request
 def response_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['X-Clacks-Overhead'] = 'GNU Terry Pratchett'
     return response
 
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+    client.subscribe("weather/#")
+
+def on_message(client, userdata, msg):
+    #print(msg.topic+" "+str(msg.payload))
+    sample = json.loads(msg.payload)
+    accumulator.append(sample['speed'], sample['temp'], sample['dir'])
+
 if __name__ == '__main__':
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect("localhost", 1883, 60)
+    client.loop_start()
+
     app.run(host='0.0.0.0', port=8000, threaded=True)
