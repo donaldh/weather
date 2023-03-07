@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import math
 import json
 import time
 import sqlite3
@@ -16,6 +17,15 @@ class Accumulator:
         self.temps = []
         self.vanes = []
 
+    def average_bearings(self):
+        x = y = 0
+        for a in self.vanes:
+            x += math.cos(math.radians(a))
+            y += math.sin(math.radians(a))
+
+        ave = math.atan2(y, x)
+        return (int(math.degrees(ave)) + 360) % 360
+
     def append(self, speed, temp, vane):
         self.speeds.append(speed)
         self.temps.append(temp)
@@ -23,7 +33,7 @@ class Accumulator:
         if len(self.speeds) == 10:
             avSpeed = sum(self.speeds) / len(self.speeds)
             avTemp = sum(self.temps) / len(self.temps)
-            avVane = sum(self.vanes) / len(self.vanes)
+            avVane = self.average_bearings()
             self.reset()
             self.store(avSpeed, avTemp, avVane)
 
