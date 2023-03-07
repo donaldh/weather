@@ -41,43 +41,18 @@ class Counter:
 
 anemometer = Counter()
 
-class Accumulator:
-    def __init__(self, many):
-        self.many = many
-        self.reset()
-
-    def reset(self):
-        self.speeds = []
-        self.temps = []
-        self.vanes = []
-
-    def append(self, speed, temp, vane):
-        self.speeds.append(speed)
-        self.temps.append(temp)
-        self.vanes.append(vane)
-        if len(self.speeds) == self.many:
-            avSpeed = sum(self.speeds) / len(self.speeds)
-            avTemp = sum(self.temps) / len(self.temps)
-            avVane = sum(self.vanes) / len(self.vanes)
-            self.reset()
-            self.store(avSpeed, avTemp, avVane)
-
-    def store(self, mph, temp, vane):
-        xmit_temp(time.time(), temp, mph, vane, None)
-
-accumulator = Accumulator(1)
-
 def alarm_handler(signum, frame):
     revs = anemometer.read()
     temp_volt = read_temp()
     vane_volt = read_vane()
 
-    xmit_raw(time.time(), temp_volt, revs, vane_volt)
+    unixtime = time.time_ns() // 1000000000
+    xmit_raw(unixtime, temp_volt, revs, vane_volt)
 
     mph = revs_to_speed(revs)
     temp = volt_to_temp(temp_volt)
     vane = volt_to_vane(vane_volt)
-    accumulator.append(mph, temp, vane)
+    xmit_temp(unixtime, temp, mph, vane, None)
 
 signal.signal(signal.SIGALRM, alarm_handler)
 signal.setitimer(signal.ITIMER_REAL, 1, 1)
