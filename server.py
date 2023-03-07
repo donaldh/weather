@@ -104,10 +104,9 @@ def response_headers(response):
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
-    client.subscribe("weather/#")
+    client.subscribe("weather/sample")
 
 def on_message(client, userdata, msg):
-    #print(msg.topic+" "+str(msg.payload))
     sample = json.loads(msg.payload)
     accumulator.append(sample['speed'], sample['temp'], sample['dir'])
 
