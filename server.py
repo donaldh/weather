@@ -46,7 +46,7 @@ def write_temp(when, temp, speed, dir, rain):
         cursor = conn.cursor()
         # print(f"{when} {temp} {speed} {dir}")
         try:
-            cursor.execute('INSERT into weather (time, temp, speed, dir, rain) values (cast(?*1000 as integer),round(?,1),?,?,?)',
+            cursor.execute('INSERT into weather (time, temp, speed, dir, rain) values (cast(? as integer),round(?,1),?,?,?)',
                            [when, temp, speed, dir, rain])
         except:
             pass
@@ -58,41 +58,41 @@ app.debug = True
 
 def query_latest(conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT max(time) as time, ROUND(temp,1), ROUND(speed,1), ROUND(dir,0) from WEATHER")
+    cursor.execute("SELECT max(time) * 1000 as time, ROUND(temp,1), ROUND(speed,1), ROUND(dir,0) from WEATHER")
     data = cursor.fetchall()
     return data[0]
 
 def query_past(conn, start, interval):
     cursor = conn.cursor()
-    cursor.execute("SELECT max(time) as time, avg(temp) as temp, avg(speed) as speed, avg(dir) as dir FROM weather WHERE time > ? group by cast(time / ? as integer)", [start, interval])
+    cursor.execute("SELECT max(time) * 1000 as time, avg(temp) as temp, avg(speed) as speed, avg(dir) as dir FROM weather WHERE time > ? group by cast(time / ? as integer)", [start, interval])
     data = cursor.fetchall()
     return data
 
 def query_date(conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT strftime('%s', 'now') * 1000")
+    cursor.execute("SELECT strftime('%s', 'now')")
     data = cursor.fetchall()
-    return data[0][0]
+    return int(data[0][0])
 
 @app.route('/seven-days')
 def weather_seven_days():
-    return weather(86400000 * 7)
+    return weather(86400 * 7)
 
 @app.route('/three-days')
 def weather_three_days():
-    return weather(86400000 * 3)
+    return weather(86400 * 3)
 
 @app.route('/day')
 def weather_day():
-    return weather(86400000)
+    return weather(86400)
 
 @app.route('/half')
 def weather_half():
-    return weather(43200000)
+    return weather(43200)
 
 @app.route('/six')
 def weather_six():
-    return weather(21600000)
+    return weather(21600)
 
 @app.route('/')
 def weather_now():
@@ -104,7 +104,7 @@ def weather(duration):
         start = now - duration
         latest = query_latest(conn)
         data = query_past(conn, start, duration / 143)
-        return jsonify(data=data, samples=len(data), now=latest, start=start, end=now)
+        return jsonify(data=data, samples=len(data), now=latest, start=start * 1000, end=now * 1000)
 
 @app.after_request
 def response_headers(response):
