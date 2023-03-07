@@ -68,7 +68,7 @@ signal.setitimer(signal.ITIMER_REAL, 1, 1)
 def my_callback(channel):
     anemometer.increment()
 
-GPIO.add_event_detect(16, GPIO.FALLING, callback=my_callback, bouncetime=10)
+GPIO.add_event_detect(16, GPIO.FALLING, callback=my_callback, bouncetime=1)
 
 def read_volt(channel):
     GPIO.output(24, True)
@@ -110,6 +110,14 @@ def read_vane():
     volt = read_volt(0)
     vane = (volt - 0.17) * 359 / 2.91
     return math.floor(vane)
+
+def xmit_raw(when, temp, speed, dir):
+    client.publish("weather/raw", json.dumps({
+        "time": when,
+        "temp": temp,
+        "speed": speed,
+        "dir": dir
+        }))
 
 def xmit_temp(when, temp, speed, dir, rain):
     client.publish("weather/sample", json.dumps({
