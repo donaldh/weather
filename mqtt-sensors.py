@@ -18,16 +18,28 @@ GPIO.setup(23, GPIO.OUT)
 GPIO.setup(19, GPIO.OUT)
 GPIO.setup(21, GPIO.IN)
 
-class Speed:
+def revs_to_speed(revs):
+    mph = revs * 2.5
+    return mph
+
+def volt_to_temp(volt):
+    temp = (54.35 * volt) - 15.44
+    return temp
+
+def volt_to_vane(volt):
+    vane = (volt - 0.17) * 359 / 2.91
+    return math.floor(vane)
+
+class Counter:
     count = 0
     def read(self):
-        mph = self.count * 2.5
+        revs = self.count
         self.count = 0
-        return mph
+        return revs
     def increment(self):
         self.count += 1
 
-anemometer = Speed()
+anemometer = Counter()
 
 class Accumulator:
     def __init__(self, many):
@@ -51,15 +63,20 @@ class Accumulator:
             self.store(avSpeed, avTemp, avVane)
 
     def store(self, mph, temp, vane):
-        # print 'Measured %3.1f mph, dir %d, temperature %3.1fC' % (mph, vane, temp)
         xmit_temp(time.time(), temp, mph, vane, None)
 
 accumulator = Accumulator(1)
 
 def alarm_handler(signum, frame):
-    mph = anemometer.read()
-    temp = read_temp()
-    vane = read_vane()
+    revs = anemometer.read()
+    temp_volt = read_temp()
+    vane_volt = read_vane()
+
+    xmit_raw(time.time(), temp_volt, revs, vane_volt)
+
+    mph = revs_to_speed(revs)
+    temp = volt_to_temp(temp_volt)
+    vane = volt_to_vane(vane_volt)
     accumulator.append(mph, temp, vane)
 
 signal.signal(signal.SIGALRM, alarm_handler)
@@ -82,16 +99,12 @@ def read_volt(channel):
 
     for x in range (0,5):
         GPIO.output(19, word1[x])
-        time.sleep(0.001)
         GPIO.output(23, True)
-        time.sleep(0.001)
         GPIO.output(23, False)
 
     for x in range (0,12):
         GPIO.output(23, True)
-        time.sleep(0.001)
         bit = GPIO.input(21)
-        time.sleep(0.001)
         GPIO.output(23, False)
         value=bit*2**(12-x-1)
         anip = anip + value
@@ -103,13 +116,11 @@ def read_volt(channel):
 
 def read_temp():
     volt = read_volt(1)
-    temp = (55.5*volt) + 255.37 - 273.15
-    return temp
+    return volt
 
 def read_vane():
     volt = read_volt(0)
-    vane = (volt - 0.17) * 359 / 2.91
-    return math.floor(vane)
+    return volt
 
 def xmit_raw(when, temp, speed, dir):
     client.publish("weather/raw", json.dumps({
