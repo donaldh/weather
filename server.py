@@ -46,7 +46,8 @@ def write_temp(when, temp, speed, dir, rain):
         cursor = conn.cursor()
         # print(f"{when} {temp} {speed} {dir}")
         try:
-            cursor.execute('INSERT into weather (time, temp, speed, dir, rain) values (cast(? as integer),round(?,1),?,?,?)',
+            cursor.execute(("INSERT into weather (time, temp, speed, dir, rain) "
+                            "values (cast(? as integer),round(?,1),?,?,?)"),
                            [when, temp, speed, dir, rain])
         except:
             pass
@@ -64,7 +65,8 @@ def query_latest(conn):
 
 def query_past(conn, start, interval):
     cursor = conn.cursor()
-    cursor.execute("SELECT max(time) * 1000 as time, avg(temp) as temp, avg(speed) as speed, avg(dir) as dir FROM weather WHERE time > ? group by cast(time / ? as integer)", [start, interval])
+    cursor.execute(("SELECT max(time) * 1000 as time, avg(temp) as temp, avg(speed) as speed, avg(dir) as dir "
+                    "FROM weather WHERE time > ? group by cast(time / ? as integer)"), [start, interval])
     data = cursor.fetchall()
     return data
 
