@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>RunAtLoad</key>
+        <true/>
+    <key>KeepAlive</key>
+        <true/>
+    <key>Label</key>
+        <string>donaldh.weather</string>
+    <key>ProgramArguments</key>
+        <array>
+             <string>/Users/donaldh/git/weather/.weather/bin/python</string>
+             <string>/Users/donaldh/git/weather/server.py</string>
+        </array>
+    <key>WorkingDirectory</key>
+        <string>/Users/donaldh/git/weather</string>
+    <key>StandardOutPath</key>
+        <string>/Users/donaldh/git/weather/logfile.log</string>
+    <key>StandardErrorPath</key>
+        <string>/Users/donaldh/git/weather/logfile.log</string>
+    <key>EnvironmentVariables</key>
+        <dict>
+        <key>PATH</key>
+            <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+            <string>/Users/donaldh</string>
+        </dict>
+</dict>
+</plist>
