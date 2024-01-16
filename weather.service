@@ -1,0 +1,13 @@
+[Unit]
+Description=Weather Sensor
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+User=donaldh
+ExecStart=python /home/donaldh/weather/mqtt-sensors.py
+
+[Install]
+WantedBy=multi-user.target
+
