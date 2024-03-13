@@ -129,4 +129,4 @@ if __name__ == '__main__':
     client.connect("localhost", 1883, 60)
     client.loop_start()
 
-    app.run(host='0.0.0.0', port=8000, threaded=True)
+    app.run(host='0.0.0.0', port=4242, threaded=True)
